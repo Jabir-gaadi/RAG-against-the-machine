@@ -2,6 +2,7 @@ import pathlib
 import warnings
 
 
+# je suis
 class Indexer:
     def __init__(self, data_path: str | pathlib.Path):
         self.data_path = pathlib.Path(data_path)

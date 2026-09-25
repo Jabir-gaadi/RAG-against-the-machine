@@ -93,15 +93,42 @@ def chunk_python_files(content: str, max_chunk_size: int):
         return []
     if max_chunk_size <= 0:
         raise ValueError("max chunk size always should greather than 0")
-    valid_chunk_py = []
     lines = content.splitlines(keepends=True)
 
-    start = 0
-    current_index = 0
-    tree = ast.parse(content)
+    current_len = 0
+    try:
+        tree = ast.parse(content)
+    except SyntaxError:
+        raise SyntaxError("in chunking python file should be a python code")
+    valid_chunk_py = []
     for section in tree.body:
-        if isinstance(section, (ast.FunctionDef, ast.ClassDef, ast.Import, ast.ImportFrom)) and current_index > start:
-            start_at_line = section.lineno
-            end_at_line = section.end_lineno
-            start_index = sum(len(li) for li in lines[:start_at_line - 1])
-            end_index = sum(len(line) for line in lines[:end_at_line])
+        end_at_line = section.end_lineno
+        end_index = sum(len(line) for line in lines[:end_at_line])
+        tmp_content = content[current_len:end_index]
+        if end_index - current_len > max_chunk_size:
+            valid_chunk_py += safe_splitter(
+                content,
+                current_len,
+                end_index,
+                max_chunk_size)
+        else:
+            valid_chunk_py.append(ChunkStructure(
+                tmp_content,
+                current_len,
+                end_index
+            ))
+        current_len = end_index
+    if len(content) - current_len > max_chunk_size:
+        valid_chunk_py += safe_splitter(
+            content,
+            current_len,
+            len_content,
+            max_chunk_size
+        )
+    elif current_len < len_content:
+        valid_chunk_py.append(ChunkStructure(
+            content[current_len:len_content],
+            current_len,
+            len_content
+        ))
+    return valid_chunk_py
