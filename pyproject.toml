@@ -1,0 +1,28 @@
+[tool.poetry]
+package-mode = false
+name = "rag-against-the-machine"
+version = "0.1.0"
+description = "Retrieval-Augmented Generation system using TF-IDF/BM25 and Pydantic"
+authors = ["Jabir Gaadi"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pydantic = "^2.0"
+scikit-learn = "^1.3.0"  # For TF-IDF and text vectorization
+rank-bm25 = "^0.2.2"     # For BM25 retrieval
+numpy = "^1.24.0"        # Required for matrix operations
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+flake8 = "^7.3.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "flake8>=7.3.0",
+    "pydantic>=2.13.5",
+]
