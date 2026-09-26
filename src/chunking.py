@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import ast
+from pathlib import Path
 
 
 @dataclass
@@ -9,7 +10,12 @@ class ChunkStructure():
     last_character_index: int
 
 
-def safe_splitter(content: str, start: int, end: int, max_chunk_size: int):
+def safe_splitter(
+    content: str,
+    start: int,
+    end: int,
+    max_chunk_size: int
+        ) -> list[ChunkStructure]:
     if max_chunk_size <= 0:
         raise ValueError("max chunk size always should greather than 0")
     if start >= end:
@@ -18,7 +24,6 @@ def safe_splitter(content: str, start: int, end: int, max_chunk_size: int):
     while True:
         if end - start <= max_chunk_size:
             chunk_text = content[start:end]
-            # print(chunk_text)
             chunks_list.append(ChunkStructure(
                 content=chunk_text,
                 first_character_index=start,
@@ -45,13 +50,13 @@ def safe_splitter(content: str, start: int, end: int, max_chunk_size: int):
     return chunks_list
 
 
-def chunk_md_text(content: str, max_chunk_size: int):
+def chunk_md_text(content: str, max_chunk_size: int) -> list[ChunkStructure]:
     len_content = len(content)
     if len_content == 0:
         return []
     if max_chunk_size <= 0:
         raise ValueError("max chunk size always should greather than 0")
-    valid_chunks_text = []
+    valid_chunks_text: list[ChunkStructure] = []
     lines = content.splitlines(keepends=True)
 
     start = 0
@@ -87,7 +92,10 @@ def chunk_md_text(content: str, max_chunk_size: int):
     return valid_chunks_text
 
 
-def chunk_python_files(content: str, max_chunk_size: int):
+def chunk_python_files(
+        content: str,
+        max_chunk_size: int
+        ) -> list[ChunkStructure]:
     len_content = len(content)
     if len_content == 0:
         return []
@@ -99,7 +107,7 @@ def chunk_python_files(content: str, max_chunk_size: int):
     try:
         tree = ast.parse(content)
     except SyntaxError:
-        raise SyntaxError("in chunking python file should be a python code")
+        return safe_splitter(content, 0, len_content, max_chunk_size)
     valid_chunk_py = []
     for section in tree.body:
         end_at_line = section.end_lineno
@@ -132,3 +140,19 @@ def chunk_python_files(content: str, max_chunk_size: int):
             len_content
         ))
     return valid_chunk_py
+
+
+def chunk_files(
+    content: str,
+    file_path: str | Path,
+    max_chunk_size: int
+        ) -> list[ChunkStructure]:
+    file_path = Path(file_path)
+    valid_ext = ['.txt', '.rst', '.md']
+    if file_path.suffix.lower() == '.py':
+        return chunk_python_files(content, max_chunk_size)
+    elif file_path.suffix.lower() in valid_ext:
+        return chunk_md_text(content, max_chunk_size)
+    else:
+        raise ValueError(
+            f"Unsupported extension for this file path: {file_path}")
