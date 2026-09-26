@@ -2,6 +2,7 @@ from chunking import chunk_files
 from pathlib import Path
 import pathlib
 import warnings
+from .models import IndexedChunk
 
 
 # je suis
@@ -41,6 +42,13 @@ class Indexer:
 
     def main_machine_chunk(self, output_path: Path, max_chunk_size: int):
         documment = self.extract_corpus()
+        all_index_records: list[IndexedChunk] = []
         for path, info in documment.items():
-            chunck_list = chunk_files(info[0], info[1], max_chunk_size)
-            
+            chunk_list = chunk_files(info[0], info[1], max_chunk_size)
+            for chunk in chunk_list:
+                all_index_records.append(IndexedChunk(
+                    content=chunk.content,
+                    file_path=path,
+                    first_character_index=chunk.first_character_index,
+                    last_character_index=chunk.last_character_index,
+                    file_type=info[1]))
