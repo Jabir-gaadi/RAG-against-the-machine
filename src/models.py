@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from pydantic import BaseModel, Field
 import uuid
 from typing import List
@@ -44,7 +43,6 @@ class StudentSearchResultsAndAnswer(BaseModel):
     k: int
 
 
-@dataclass
 class IndexedChunk(BaseModel):
     content: str
     file_path: str

@@ -1,8 +1,9 @@
-from chunking import chunk_files
+from .chunking import chunk_files
 from pathlib import Path
 import pathlib
 import warnings
 from .models import IndexedChunk
+import json
 
 
 # je suis
@@ -40,15 +41,32 @@ class Indexer:
             self.documents[tmp_path] = (source, file_type)
         return self.documents
 
-    def main_machine_chunk(self, output_path: Path, max_chunk_size: int):
+    def main_machine_chunk(
+        self,
+        output_path: str | Path,
+        max_chunk_size: int
+            ) -> list[IndexedChunk]:
+        output_path = Path(output_path)
         documment = self.extract_corpus()
         all_index_records: list[IndexedChunk] = []
         for path, info in documment.items():
-            chunk_list = chunk_files(info[0], info[1], max_chunk_size)
+            chunk_list = chunk_files(info[0], path, max_chunk_size)
             for chunk in chunk_list:
-                all_index_records.append(IndexedChunk(
+                tmp_chunk = IndexedChunk(
                     content=chunk.content,
                     file_path=path,
                     first_character_index=chunk.first_character_index,
                     last_character_index=chunk.last_character_index,
-                    file_type=info[1]))
+                    file_type=info[1])
+                all_index_records.append(tmp_chunk)
+        try:
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(output_path, 'w') as file:
+                json_content = json.dumps([
+                    index.model_dump() for index in all_index_records])
+                file.write(json_content)
+        except FileNotFoundError:
+            raise FileNotFoundError(f'Can;t find : {output_path}')
+        except PermissionError:
+            raise PermissionError(f'NO permission: {output_path}')
+        return all_index_records
