@@ -6,7 +6,6 @@ from .models import IndexedChunk
 import json
 
 
-# je suis
 class Indexer:
     def __init__(self, data_path: str | pathlib.Path):
         self.data_path = pathlib.Path(data_path)
@@ -61,7 +60,7 @@ class Indexer:
                 all_index_records.append(tmp_chunk)
         try:
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(output_path, 'w') as file:
+            with open(output_path, 'w', encoding='utf-8') as file:
                 json_content = json.dumps([
                     index.model_dump() for index in all_index_records])
                 file.write(json_content)
