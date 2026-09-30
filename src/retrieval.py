@@ -7,6 +7,7 @@ from pydantic import ValidationError
 import re
 from rank_bm25 import BM25Okapi
 
+# Rag
 
 class Retriever():
     def __init__(self, path: str | Path):
