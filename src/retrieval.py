@@ -11,8 +11,8 @@ from rank_bm25 import BM25Okapi
 class Retriever():
     def __init__(self, path: str | Path):
         self.path = Path(path)
-        self.loaded_list = []
-        self.tokenized_corpus = []
+        self.loaded_list: list[IndexedChunk] = []
+        self.tokenized_corpus: list[list[str]] = []
         self.bm25: BM25Okapi | None = None
         self.build_bm25()
 
@@ -39,7 +39,7 @@ class Retriever():
         tokenize_list = re.findall(r'\w+', content)
         return tokenize_list
 
-    def build_bm25(self):
+    def build_bm25(self) -> None:
         self.tokenized_corpus = []
         load_indexed = self.load_and_convert()
         if not load_indexed:
@@ -49,15 +49,19 @@ class Retriever():
         our_bm25 = BM25Okapi(self.tokenized_corpus)
         self.bm25 = our_bm25
 
-    def search(self, query, k: int) -> list[MinimalSource]:
+    def search(self, query: str, k: int) -> list[MinimalSource]:
         if k <= 0:
             raise ValueError("NUmber of score should > 0 !")
-        minimal_src_list = []
+        minimal_src_list: list[MinimalSource] = []
         if k > len(self.loaded_list):
             k = len(self.loaded_list)
         chunk_query = self.tokenize(query)
         if not chunk_query:
             raise ValueError("we get error in chunking the query!")
+        if self.bm25 is None:
+            self.build_bm25()
+        if self.bm25 is None:
+            raise RuntimeError("BM25 could not be initialized!")
         score_of_query = self.bm25.get_scores(chunk_query)
         enumerate_score = enumerate(score_of_query)
         sorted_score = sorted(
