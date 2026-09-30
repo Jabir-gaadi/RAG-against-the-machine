@@ -1,4 +1,5 @@
-from .models import MinimalSource
+from .models import RagDataset, MinimalSource, StudentSearchResults
+from .models import MinimalSearchResults
 from json import JSONDecodeError
 import json
 from pathlib import Path
@@ -76,3 +77,19 @@ class Retriever():
                 last_character_index=chunk.last_character_index
             ))
         return minimal_src_list
+
+    def search_dataset(
+        self,
+        rag_data: RagDataset,
+        k: int
+            ) -> StudentSearchResults:
+        searching_quesions: list[MinimalSource] = []
+        searching_results: list[MinimalSearchResults] = []
+        for data in rag_data.rag_questions:
+            searching_quesions = self.search(data.question, k)
+            searching_results.append(MinimalSearchResults(
+                question_id=data.question_id,
+                question=data.question,
+                retrieved_sources=searching_quesions
+            ))
+        return StudentSearchResults(search_results=searching_results, k=k)
