@@ -4,7 +4,7 @@ from typing import List
 
 
 class MinimalSource(BaseModel):
-    file_path: str = Field()
+    file_path: str
     first_character_index: int
     last_character_index: int
 

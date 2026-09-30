@@ -1,14 +1,20 @@
+from .models import MinimalSource
 from json import JSONDecodeError
 import json
 from pathlib import Path
 from .models import IndexedChunk
 from pydantic import ValidationError
+import re
+from rank_bm25 import BM25Okapi
 
 
 class Retriever():
     def __init__(self, path: str | Path):
         self.path = Path(path)
         self.loaded_list = []
+        self.tokenized_corpus = []
+        self.bm25: BM25Okapi | None = None
+        self.build_bm25()
 
     def load_and_convert(self) -> list[IndexedChunk]:
         self.loaded_list = []
@@ -28,4 +34,41 @@ class Retriever():
                 raise ValueError(f"invalid chunk !: \n {e}")
         return self.loaded_list
 
-    def tekonizer_algo()
+    def tokenize(self, content: str) -> list[str]:
+        content = content.lower()
+        tokenize_list = re.findall(r'\w+', content)
+        return tokenize_list
+
+    def build_bm25(self):
+        self.tokenized_corpus = []
+        load_indexed = self.load_and_convert()
+        if not load_indexed:
+            raise ValueError("There is no chunks to tokenize")
+        for chunk in load_indexed:
+            self.tokenized_corpus.append(self.tokenize(chunk.content))
+        our_bm25 = BM25Okapi(self.tokenized_corpus)
+        self.bm25 = our_bm25
+
+    def search(self, query, k: int) -> list[MinimalSource]:
+        if k < 0:
+            raise ValueError("NUmber of score should positif !")
+        minimal_src_list = []
+        if k > len(self.loaded_list):
+            k = len(self.loaded_list)
+        chunk_query = self.tokenize(query)
+        if not chunk_query:
+            raise ValueError("we get error in chunking the query!")
+        score_of_query = self.bm25.get_scores(chunk_query)
+        enumerate_score = enumerate(score_of_query)
+        sorted_score = sorted(
+            enumerate_score, key=lambda x: x[1], reverse=True)
+        top_k_chunk = sorted_score[:k]
+        for best_score in top_k_chunk:
+            index = best_score[0]
+            chunk = self.loaded_list[index]
+            minimal_src_list.append(MinimalSource(
+                chunk.file_path,
+                chunk.first_character_index,
+                chunk.last_character_index
+            ))
+        return minimal_src_list
