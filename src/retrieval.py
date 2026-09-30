@@ -50,8 +50,8 @@ class Retriever():
         self.bm25 = our_bm25
 
     def search(self, query, k: int) -> list[MinimalSource]:
-        if k < 0:
-            raise ValueError("NUmber of score should positif !")
+        if k <= 0:
+            raise ValueError("NUmber of score should > 0 !")
         minimal_src_list = []
         if k > len(self.loaded_list):
             k = len(self.loaded_list)
@@ -67,8 +67,8 @@ class Retriever():
             index = best_score[0]
             chunk = self.loaded_list[index]
             minimal_src_list.append(MinimalSource(
-                chunk.file_path,
-                chunk.first_character_index,
-                chunk.last_character_index
+                file_path=chunk.file_path,
+                first_character_index=chunk.first_character_index,
+                last_character_index=chunk.last_character_index
             ))
         return minimal_src_list
