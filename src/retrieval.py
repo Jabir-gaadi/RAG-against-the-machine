@@ -7,6 +7,7 @@ from .models import IndexedChunk
 from pydantic import ValidationError
 import re
 from rank_bm25 import BM25Okapi
+from tqdm import tqdm
 
 
 class Retriever():
@@ -85,7 +86,7 @@ class Retriever():
             ) -> StudentSearchResults:
         searching_quesions: list[MinimalSource] = []
         searching_results: list[MinimalSearchResults] = []
-        for data in rag_data.rag_questions:
+        for data in tqdm(rag_data.rag_questions):
             searching_quesions = self.search(data.question, k)
             searching_results.append(MinimalSearchResults(
                 question_id=data.question_id,
