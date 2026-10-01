@@ -40,5 +40,13 @@ def run_search(
     return student_search_res
 
 
-def search_dataset(dataset_path: Path | str, k: int, save_directory: Path):
-    run_search(data_path=dataset_path, k=k, save_dir=save_directory)
+def search_dataset(
+    dataset_path: Path | str,
+    k: int,
+    save_directory: Path,
+    index_path: Path | str = "data/processed/index.json"
+        ) -> StudentSearchResults:
+    return run_search(
+        data_path=dataset_path, k=k, save_dir=save_directory,
+        index_path=index_path
+            )
