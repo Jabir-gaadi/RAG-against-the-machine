@@ -9,8 +9,8 @@ from pathlib import Path
 def run_search(
     data_path: str | Path,
     k: int,
-    index_path: Path | str,
-    save_dir: Path | str
+    save_dir: Path | str,
+    index_path: Path | str = "data/processed/index.json"
         ) -> StudentSearchResults:
     try:
         data_path = Path(data_path)
@@ -38,3 +38,7 @@ def run_search(
     except PermissionError:
         raise PermissionError(f'NO permission: {output_file}')
     return student_search_res
+
+
+def search_dataset(dataset_path: Path | str, k: int, save_directory: Path):
+    run_search(data_path=dataset_path, k=k, save_dir=save_directory)
