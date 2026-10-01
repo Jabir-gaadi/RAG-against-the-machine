@@ -65,7 +65,7 @@ class Indexer:
                     index.model_dump() for index in all_index_records])
                 file.write(json_content)
         except FileNotFoundError:
-            raise FileNotFoundError(f'Can;t find : {output_path}')
+            raise FileNotFoundError(f'Cant find : {output_path}')
         except PermissionError:
             raise PermissionError(f'NO permission: {output_path}')
         return all_index_records

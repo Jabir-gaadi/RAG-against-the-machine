@@ -9,9 +9,9 @@ from pathlib import Path
 def run_search(
     data_path: str | Path,
     k: int,
-    index_path: str,
+    index_path: Path | str,
     save_dir: Path | str
-        ):
+        ) -> StudentSearchResults:
     try:
         data_path = Path(data_path)
         with open(data_path, 'r', encoding='UTF-8') as file:
@@ -21,7 +21,7 @@ def run_search(
     except PermissionError:
         raise PermissionError(f"No permission to {data_path}")
     except JSONDecodeError:
-        raise ValueError("Invalid JSON index file")
+        raise ValueError("Invalid dataset json file")
     dataset = RagDataset.model_validate(json_data)
     retriever = Retriever(index_path)
     student_search_res: StudentSearchResults = retriever.search_dataset(
@@ -34,7 +34,7 @@ def run_search(
             search_res = json.dumps(student_search_res.model_dump())
             file.write(search_res)
     except FileNotFoundError:
-        raise FileNotFoundError(f'Can;t find : {output_file}')
+        raise FileNotFoundError(f'Cant find : {output_file}')
     except PermissionError:
         raise PermissionError(f'NO permission: {output_file}')
     return student_search_res
