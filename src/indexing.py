@@ -4,6 +4,7 @@ import pathlib
 import warnings
 from .models import IndexedChunk
 import json
+from tqdm import tqdm
 
 
 class Indexer:
@@ -43,12 +44,12 @@ class Indexer:
     def main_machine_chunk(
         self,
         output_path: str | Path,
-        max_chunk_size: int
+        max_chunk_size: int = 2000
             ) -> list[IndexedChunk]:
         output_path = Path(output_path)
         documment = self.extract_corpus()
         all_index_records: list[IndexedChunk] = []
-        for path, info in documment.items():
+        for path, info in tqdm(documment.items()):
             chunk_list = chunk_files(info[0], path, max_chunk_size)
             for chunk in chunk_list:
                 tmp_chunk = IndexedChunk(

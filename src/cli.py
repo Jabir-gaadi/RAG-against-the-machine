@@ -4,6 +4,7 @@ from json import JSONDecodeError
 import json
 from .retrieval import Retriever
 from .evaluation import evaluation
+from .indexing import Indexer
 from pathlib import Path
 
 
@@ -61,3 +62,19 @@ def evaluate(
         student_search_res_path=student_search_results_path,
         dataset_path=dataset_path)
     return metrics
+
+
+def index(
+    max_chunk_size: int = 2000,
+    raw_data_path: str | Path = "data/raw",
+    output_path: str | Path = "data/processed/index.json"
+        ) -> dict[str, int | str | Path]:
+    indexer_class = Indexer(raw_data_path)
+    res_of_index = indexer_class.main_machine_chunk(
+        output_path=output_path,
+        max_chunk_size=max_chunk_size)
+    prepare_result = {
+        "index_path": output_path,
+        "chunk_count": len(res_of_index)
+    }
+    return prepare_result
