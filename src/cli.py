@@ -3,6 +3,7 @@ from .models import RagDataset
 from json import JSONDecodeError
 import json
 from .retrieval import Retriever
+from .evaluation import evaluation
 from pathlib import Path
 
 
@@ -50,3 +51,13 @@ def search_dataset(
         data_path=dataset_path, k=k, save_dir=save_directory,
         index_path=index_path
             )
+
+
+def evaluate(
+    student_search_results_path: str | Path,
+    dataset_path: str | Path
+        ) -> dict[str, int | float]:
+    metrics = evaluation(
+        student_search_res_path=student_search_results_path,
+        dataset_path=dataset_path)
+    return metrics
