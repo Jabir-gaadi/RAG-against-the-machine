@@ -1,4 +1,4 @@
-from .models import StudentSearchResults
+from .models import StudentSearchResults, MinimalSource
 from .models import RagDataset
 from json import JSONDecodeError
 import json
@@ -78,3 +78,13 @@ def index(
         "chunk_count": len(res_of_index)
     }
     return prepare_result
+
+
+def search(
+    query: str,
+    k: int,
+    index_path: str = "data/processed/index.json"
+        ) -> list[MinimalSource]:
+    retriever_class = Retriever(path=index_path)
+    res_of_search = retriever_class.search(query=query, k=k)
+    return res_of_search
