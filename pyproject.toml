@@ -22,9 +22,28 @@ tqdm = "^4.70.1"
 pytest = "^8.0.0"
 flake8 = "^7.3.0"
 
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[project]
+name = "Rag"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.14.1",
+    "transformers>=5.18.0",
+]
 
 [dependency-groups]
 dev = [

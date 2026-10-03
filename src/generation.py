@@ -1,10 +1,15 @@
 from .models import MinimalSource
 from pathlib import Path
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
 class Generator():
     def __init__(self, root_path: str):
         self.root_path: Path = Path(root_path)
+        self.model_name = "Qwen/Qwen3-0.6B"
+        self.tokenizer = None
+        self.model = None
 
     def load_context(self, min_sources: list[MinimalSource]) -> list[
             dict[str, list[int] | str]]:
@@ -49,3 +54,14 @@ class Generator():
         prompt += f'Question:\n{query}\n'
         prompt += 'Answer:\n'
         return prompt
+
+    def load_model(self) -> None:
+        if self.tokenizer is not None and self.model is not None:
+            return
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+        self.model = AutoModelForCausalLM.from_pretrained(
+            self.model_name,
+            torch_dtype=torch.float32
+            )
+        self.model.to("cpu")
+        self.model.eval()
