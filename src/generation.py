@@ -61,7 +61,7 @@ class Generator():
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
         self.model = AutoModelForCausalLM.from_pretrained(
             self.model_name,
-            torch_dtype=torch.float32
+            dtype=torch.float32
             )
         self.model.to("cpu")
         self.model.eval()
