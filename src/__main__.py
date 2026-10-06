@@ -1,5 +1,6 @@
 import fire
-from .cli import search_dataset, evaluate, index, search, answer
+from .cli import (
+    search_dataset, evaluate, index, search, answer, answer_dataset)
 
 
 if __name__ == "__main__":
@@ -8,5 +9,6 @@ if __name__ == "__main__":
         "evaluate": evaluate,
         "index": index,
         "search": search,
-        "answer": answer
+        "answer": answer,
+        "answer_dataset": answer_dataset
         })
