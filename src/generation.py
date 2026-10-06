@@ -5,7 +5,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
 class Generator():
-    def __init__(self, root_path: str):
+    def __init__(self, root_path: str | Path):
         self.root_path: Path = Path(root_path)
         self.model_name = "Qwen/Qwen3-0.6B"
         self.tokenizer = None
@@ -39,7 +39,14 @@ class Generator():
 
     def prompt_construction(self, query: str, context_record: list[
             dict[str, list[int] | str]]) -> str:
-        prompt = 'Answer only from the provided context.'
+        prompt = 'Answer only from the provided context.\n'
+        prompt += 'Use only facts explicitly stated in the provided context.'
+        prompt += 'If the context does not explicitly contain the answer, \
+reply exactly:\n'
+        prompt += '/"I do not have enough context to answer this question./"'
+        prompt += 'Do not use prior knowledge, infer missing facts,'
+        prompt += 'or expand abbreviations unless the context explicitly does \
+so.'
         prompt += 'If the context is insufficient, say so. '
         prompt += 'Do not invent facts.\n'
         for i, context in enumerate(context_record, 1):

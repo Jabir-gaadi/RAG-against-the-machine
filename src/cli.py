@@ -1,6 +1,7 @@
+from .models import MinimalAnswer
+from .generation import Generator
+from .models import UnansweredQuestion, RagDataset
 from .models import StudentSearchResults, MinimalSource
-from .models import RagDataset
-from json import JSONDecodeError
 import json
 from .retrieval import Retriever
 from .evaluation import evaluation
@@ -12,7 +13,7 @@ def run_search(
     data_path: str | Path,
     k: int,
     save_dir: Path | str,
-    index_path: Path | str = "data/processed/index.json"
+    index_path: Path | str
         ) -> StudentSearchResults:
     try:
         data_path = Path(data_path)
@@ -22,7 +23,7 @@ def run_search(
         raise FileNotFoundError(f"cant found this file {data_path}")
     except PermissionError:
         raise PermissionError(f"No permission to {data_path}")
-    except JSONDecodeError:
+    except json.JSONDecodeError:
         raise ValueError("Invalid dataset json file")
     dataset = RagDataset.model_validate(json_data)
     retriever = Retriever(index_path)
@@ -88,3 +89,22 @@ def search(
     retriever_class = Retriever(path=index_path)
     res_of_search = retriever_class.search(query=query, k=k)
     return res_of_search
+
+
+def answer(
+    query: str,
+    k: int,
+    index_path: str | Path = "data/processed/index.json",
+    root_path: str | Path = "."
+        ) -> MinimalAnswer:
+    unanswered_query = UnansweredQuestion(question=query)
+    retriver_class = Retriever(index_path)
+    min_sources = retriver_class.search(query, k)
+    generator = Generator(root_path)
+    generated_answer = generator.answer_question(query, min_sources)
+    return MinimalAnswer(
+        question_id=unanswered_query.question_id,
+        question=query,
+        retrieved_sources=min_sources,
+        answer=generated_answer
+    )

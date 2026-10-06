@@ -41,6 +41,7 @@ name = "Rag"
 version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = [
+    "fire>=0.7.1",
     "torch>=2.14.1",
     "transformers>=5.18.0",
 ]
