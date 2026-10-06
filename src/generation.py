@@ -70,7 +70,16 @@ class Generator():
         self.load_model()
         if self.tokenizer is None or self.model is None:
             raise RuntimeError("error of loading the model in runtime")
-        model_input = self.tokenizer(prompt, return_tensors="pt")
+        messages = [
+            {"role": "user", "content": f"{prompt}"},
+            ]
+        model_input = self.tokenizer.apply_chat_template(
+            messages,
+            add_generation_prompt=True,
+            tokenize=True,
+            return_dict=True,
+            return_tensors="pt",
+            enable_thinking=False).to(self.model.device)
         with torch.no_grad():
             generated_ids = self.model.generate(
                 **model_input,
