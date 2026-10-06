@@ -65,3 +65,21 @@ class Generator():
             )
         self.model.to("cpu")
         self.model.eval()
+
+    def generate_from_prompt(self, prompt: str) -> str:
+        self.load_model()
+        if self.tokenizer is None or self.model is None:
+            raise RuntimeError("error of loading the model in runtime")
+        model_input = self.tokenizer(prompt, return_tensors="pt")
+        with torch.no_grad():
+            generated_ids = self.model.generate(
+                **model_input,
+                max_new_tokens=256,
+                do_sample=False
+                )
+        prompt_length = model_input["input_ids"].shape[1]
+        decode_new_tok = self.tokenizer.decode(
+            generated_ids[0, prompt_length:],
+            skip_special_tokens=True
+            )
+        return decode_new_tok.strip()
