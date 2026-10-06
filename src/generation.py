@@ -38,7 +38,7 @@ class Generator():
         return context_chunk
 
     def prompt_construction(self, query: str, context_record: list[
-            dict[str, list[int] | str]]):
+            dict[str, list[int] | str]]) -> str:
         prompt = 'Answer only from the provided context.'
         prompt += 'If the context is insufficient, say so. '
         prompt += 'Do not invent facts.\n'
@@ -92,3 +92,10 @@ class Generator():
             skip_special_tokens=True
             )
         return decode_new_tok.strip()
+
+    def answer_question(self, query: str, sources: list[MinimalSource]) -> str:
+        if not sources:
+            return "I do not have enough context to answer this question."
+        this_loaded_context = self.load_context(min_sources=sources)
+        final_prompt = self.prompt_construction(query, this_loaded_context)
+        return self.generate_from_prompt(final_prompt)
