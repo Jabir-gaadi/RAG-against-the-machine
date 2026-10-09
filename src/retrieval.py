@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from .models import IndexedChunk
 from pydantic import ValidationError
-import re
+from re import findall
 from rank_bm25 import BM25Okapi
 from tqdm import tqdm
 
@@ -36,10 +36,21 @@ class Retriever():
                 raise ValueError(f"invalid chunk !: \n {e}")
         return self.loaded_list
 
-    def tokenize(self, content: str) -> list[str]:
+    def tokenize_text(self, content: str) -> list[str]:
         content = content.lower()
-        tokenize_list = re.findall(r'\w+', content)
+        tokenize_list = findall(r'\w+', content)
         return tokenize_list
+
+    def tokenize_python(self, content: str) -> list[str]:
+        content = content.lower()
+        final_tokens = []
+        tokenize_list = findall(r"[A-Za-z0-9_]+", content)
+        for chunk in tokenize_list:
+            final_tokens.append(chunk)
+            if "_" in chunk:
+                parts = chunk.split("_")
+                final_tokens.extend(part for part in parts if part)
+        return final_tokens
 
     def build_bm25(self) -> None:
         self.tokenized_corpus = []
@@ -47,7 +58,13 @@ class Retriever():
         if not load_indexed:
             raise ValueError("There is no chunks to tokenize")
         for chunk in load_indexed:
-            self.tokenized_corpus.append(self.tokenize(chunk.content))
+            if chunk.file_type == "python":
+                file_name = Path(chunk.file_path).stem
+                to_tokenize = chunk.content + '\n' + file_name
+                self.tokenized_corpus.append(self.tokenize_python(to_tokenize))
+            else:
+                to_tokenize = chunk.content
+                self.tokenized_corpus.append(self.tokenize_text(to_tokenize))
         our_bm25 = BM25Okapi(self.tokenized_corpus)
         self.bm25 = our_bm25
 
@@ -57,14 +74,14 @@ class Retriever():
         minimal_src_list: list[MinimalSource] = []
         if k > len(self.loaded_list):
             k = len(self.loaded_list)
-        chunk_query = self.tokenize(query)
-        if not chunk_query:
+        query_tokens = self.tokenize_text(query)
+        if not query_tokens:
             raise ValueError("we get error in chunking the query!")
         if self.bm25 is None:
             self.build_bm25()
         if self.bm25 is None:
             raise RuntimeError("BM25 could not be initialized!")
-        score_of_query = self.bm25.get_scores(chunk_query)
+        score_of_query = self.bm25.get_scores(query_tokens)
         enumerate_score = enumerate(score_of_query)
         sorted_score = sorted(
             enumerate_score, key=lambda x: x[1], reverse=True)
