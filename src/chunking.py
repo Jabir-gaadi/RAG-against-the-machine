@@ -112,6 +112,8 @@ def chunk_python_files(
         if start >= end:
             return
         if end - start <= max_chunk_size:
+            if content[start:end].isspace():
+                return
             valid_chunk_py.append(ChunkStructure(
                 content[start:end],
                 start,

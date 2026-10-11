@@ -1,4 +1,3 @@
-from .models import MinimalSearchResults
 from .models import AnsweredQuestion
 from pathlib import Path
 import json
@@ -21,40 +20,51 @@ def read_json_files(path: Path) -> dict:
     return json_res
 
 
-def evaluation(student_search_res_path: str | Path, dataset_path: str | Path):
-    student_search_res_path = Path(student_search_res_path)
-    dataset_path = Path(dataset_path)
-    json_res = read_json_files(student_search_res_path)
-    student_search_res = StudentSearchResults.model_validate(json_res)
-    json_data = read_json_files(dataset_path)
-    dataset: RagDataset = RagDataset.model_validate(json_data)
-    answered_question: list[AnsweredQuestion] = [
-        one
-        for one in dataset.rag_questions if isinstance(one, AnsweredQuestion)]
-    if not answered_question:
-        raise ValueError("There is no answered questions")
-    truth_question_id: list[str] = [id.question_id for id in answered_question]
-    minimal_src_res: list[MinimalSearchResults] = [
-        item for item in student_search_res.search_results]
-    search_result_id: list[str] = [id.question_id for id in minimal_src_res]
-    ground_truth = dict(zip(truth_question_id, answered_question))
-    student_result = dict(zip(search_result_id, minimal_src_res))
-    k = student_search_res.k
+def evaluation(
+    student_search_res_path: str | Path, dataset_path: str | Path
+        ) -> dict[int, float]:
 
-    hits = 0
-    total = 0
-    for original_question in answered_question:
-        question_id = original_question.question_id
-        if question_id in ground_truth and question_id in student_result:
-            first_k = student_result[question_id].retrieved_sources[:k]
-            for retr_source in first_k:
-                if retr_source in ground_truth[question_id].sources:
-                    hits += 1
-                    break
-        total += 1
-    eval_result = {
-        'matched_questions': hits,
-        'total_questions': total,
-        'recall_at_k': hits / total
-    }
-    return eval_result
+    search_path = Path(student_search_res_path)
+    dataset_path = Path(dataset_path)
+    student_search_data = read_json_files(search_path)
+    dataset_content = read_json_files(dataset_path)
+    search_data = StudentSearchResults.model_validate(student_search_data)
+    rag_datasets = RagDataset.model_validate(dataset_content)
+    truth_data_dic = {
+        answer.question_id: answer.sources
+        for answer in rag_datasets.rag_questions
+        if isinstance(answer, AnsweredQuestion)
+        }
+    search_data_dic = {
+        search.question_id: search.retrieved_sources
+        for search in search_data.search_results
+        }
+    k = search_data.k
+    total_answered_q = len(truth_data_dic)
+    hit = 0
+    recall_dic = {}
+    key_val = [1, 3, 5, 10]
+    for key in key_val:
+        if k < key:
+            break
+        hit = 0
+        for search_question_id, search_source in search_data_dic.items():
+            if search_question_id not in truth_data_dic:
+                continue
+            target_source = truth_data_dic[search_question_id][0]
+            for one_search_source in search_source[:key]:
+                if one_search_source.file_path == target_source.file_path:
+                    search_start = one_search_source.first_character_index
+                    search_end = one_search_source.last_character_index
+                    retrieve_start = target_source.first_character_index
+                    retrieve_end = target_source.last_character_index
+                    overlap = (
+                        retrieve_start < search_end
+                        and search_start < retrieve_end
+                    )
+                    if overlap:
+                        hit += 1
+                        break
+        recall_dic[key] = hit / total_answered_q
+    print(recall_dic)
+    return recall_dic
