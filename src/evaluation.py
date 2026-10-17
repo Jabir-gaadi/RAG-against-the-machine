@@ -6,6 +6,19 @@ from .models import StudentSearchResults, RagDataset
 
 
 def read_json_files(path: Path) -> dict:
+    """Read and decode a UTF-8 JSON file.
+
+    Args:
+        path: Location of the JSON file to read.
+
+    Returns:
+        Decoded JSON content.
+
+    Raises:
+        FileNotFoundError: If the file does not exist.
+        PermissionError: If the file cannot be read.
+        ValueError: If the JSON content is invalid.
+    """
     try:
         with open(path, 'r', encoding='utf-8') as file:
             json_res = json.load(file)
@@ -22,7 +35,19 @@ def read_json_files(path: Path) -> dict:
 
 def evaluation(
     student_search_res_path: str | Path, dataset_path: str | Path
-        ) -> dict[int, float]:
+        ) -> None:
+    """Calculate Recall@k from search results and answered ground truth.
+
+    A question counts as a hit when a retrieved source has the same file path
+    as the expected source and their character ranges overlap.
+
+    Args:
+        student_search_res_path: Path to student search-results JSON.
+        dataset_path: Path to the answered ground-truth dataset JSON.
+
+    Returns:
+        Recall values keyed by the evaluated cutoffs: 1, 3, 5, and 10.
+    """
 
     search_path = Path(student_search_res_path)
     dataset_path = Path(dataset_path)
@@ -66,5 +91,9 @@ def evaluation(
                         hit += 1
                         break
         recall_dic[key] = hit / total_answered_q
-    print(recall_dic)
-    return recall_dic
+    print("\nRetrieval evaluation")
+    print(f"Questions evaluated: {total_answered_q}")
+    print(f"Recall@1:  {recall_dic[1]:.1%}")
+    print(f"Recall@3:  {recall_dic[3]:.1%}")
+    print(f"Recall@5:  {recall_dic[5]:.1%}")
+    print(f"Recall@10: {recall_dic[10]:.1%}")

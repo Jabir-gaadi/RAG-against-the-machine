@@ -5,6 +5,14 @@ from pathlib import Path
 
 @dataclass
 class ChunkStructure():
+    """Store a chunk and the character range it occupies in its source file.
+
+    Attributes:
+        content: Text contained in the chunk.
+        first_character_index: Inclusive start position in the source text.
+        last_character_index: Exclusive end position in the source text.
+    """
+
     content: str
     first_character_index: int
     last_character_index: int
@@ -13,9 +21,23 @@ class ChunkStructure():
 def safe_splitter(
     content: str,
     start: int,
-    end: int,
-    max_chunk_size: int
+        end: int,
+        max_chunk_size: int
         ) -> list[ChunkStructure]:
+    """Split one text range into chunks that do not exceed the size limit.
+
+    Args:
+        content: Full source text containing the requested range.
+        start: Inclusive character index where the range starts.
+        end: Exclusive character index where the range ends.
+        max_chunk_size: Maximum number of characters allowed per chunk.
+
+    Returns:
+        Chunks preserving their positions in the original source text.
+
+    Raises:
+        ValueError: If ``max_chunk_size`` is not positive.
+    """
     if max_chunk_size <= 0:
         raise ValueError("max chunk size always should greather than 0")
     if start >= end:
@@ -51,6 +73,18 @@ def safe_splitter(
 
 
 def chunk_md_text(content: str, max_chunk_size: int) -> list[ChunkStructure]:
+    """Split Markdown or plain text at headings and safe text boundaries.
+
+    Args:
+        content: Markdown or plain-text source content.
+        max_chunk_size: Maximum number of characters allowed per chunk.
+
+    Returns:
+        Chunks that begin at Markdown headings when possible.
+
+    Raises:
+        ValueError: If ``max_chunk_size`` is not positive.
+    """
     len_content = len(content)
     if len_content == 0:
         return []
@@ -96,6 +130,18 @@ def chunk_python_files(
         content: str,
         max_chunk_size: int
         ) -> list[ChunkStructure]:
+    """Split Python content around top-level class and function definitions.
+
+    Args:
+        content: Python source code to chunk.
+        max_chunk_size: Maximum number of characters allowed per chunk.
+
+    Returns:
+        Chunks preserving top-level Python semantic boundaries when possible.
+
+    Raises:
+        ValueError: If ``max_chunk_size`` is not positive.
+    """
     len_content = len(content)
     if len_content == 0:
         return []
@@ -109,6 +155,7 @@ def chunk_python_files(
     valid_chunk_py = []
 
     def add_range(start, end) -> None:
+        """Append a range directly or split it when it exceeds the limit."""
         if start >= end:
             return
         if end - start <= max_chunk_size:
@@ -153,8 +200,18 @@ def chunk_python_files(
 def chunk_files(
     content: str,
     file_path: str | Path,
-    max_chunk_size: int
+        max_chunk_size: int
         ) -> list[ChunkStructure]:
+    """Choose the chunking strategy appropriate for the supplied file path.
+
+    Args:
+        content: Source content to chunk.
+        file_path: Path used to determine the file type.
+        max_chunk_size: Maximum number of characters allowed per chunk.
+
+    Returns:
+        Chunks produced by the Python or text chunking strategy.
+    """
     file_path = Path(file_path)
     valid_ext = ['.txt', '.md']
     if file_path.suffix.lower() == '.py':

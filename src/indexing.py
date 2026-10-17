@@ -8,11 +8,27 @@ from tqdm import tqdm
 
 
 class Indexer:
+    """Read supported corpus files and create validated chunk index records."""
+
     def __init__(self, data_path: str | pathlib.Path):
+        """Initialize an indexer for a raw corpus directory.
+
+        Args:
+            data_path: Root directory containing source files to index.
+        """
         self.data_path = pathlib.Path(data_path)
         self.documents = {}
 
     def extract_corpus(self):
+        """Read supported source files and preserve corpus-relative paths.
+
+        Returns:
+            A mapping from evaluator-compatible file paths to source content
+            and file types.
+
+        Warns:
+            UserWarning: If a file cannot be decoded, read, or found.
+        """
         files = self.data_path.rglob("*")
         valid_files = ['.py', '.md', '.txt', '.rst']
         files_list = [
@@ -46,6 +62,19 @@ class Indexer:
         output_path: str | Path,
         max_chunk_size: int = 2000
             ) -> list[IndexedChunk]:
+        """Chunk the corpus and save a UTF-8 JSON index file.
+
+        Args:
+            output_path: Destination path for the generated index JSON file.
+            max_chunk_size: Maximum number of characters in each chunk.
+
+        Returns:
+            Validated index records written to ``output_path``.
+
+        Raises:
+            FileNotFoundError: If the output destination cannot be found.
+            PermissionError: If the output file cannot be written.
+        """
         output_path = Path(output_path)
         documment = self.extract_corpus()
         all_index_records: list[IndexedChunk] = []

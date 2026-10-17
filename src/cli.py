@@ -13,6 +13,19 @@ from tqdm import tqdm
 
 
 def read_json_file(path: str | Path) -> Any:
+    """Read and decode a UTF-8 JSON file.
+
+    Args:
+        path: Location of the JSON file.
+
+    Returns:
+        Decoded JSON content.
+
+    Raises:
+        FileNotFoundError: If the file does not exist.
+        PermissionError: If the file cannot be read.
+        ValueError: If the JSON content is invalid.
+    """
     try:
         path = Path(path)
         with open(path, 'r', encoding='utf-8') as file:
@@ -30,8 +43,19 @@ def run_search(
     data_path: str | Path,
     k: int,
     save_dir: Path | str,
-    index_path: Path | str
+        index_path: Path | str
         ) -> StudentSearchResults:
+    """Search every question in a dataset and save the results as JSON.
+
+    Args:
+        data_path: Input RAG dataset JSON path.
+        k: Number of sources to retrieve for each question.
+        save_dir: Directory where search results are saved.
+        index_path: Path to the processed chunk index.
+
+    Returns:
+        Validated search results for every dataset question.
+    """
     data_path = Path(data_path)
     json_data = read_json_file(data_path)
     dataset = RagDataset.model_validate(json_data)
@@ -56,8 +80,19 @@ def search_dataset(
     dataset_path: Path | str,
     k: int,
     save_directory: Path,
-    index_path: Path | str = "data/processed/index.json"
+        index_path: Path | str = "data/processed/index.json"
         ) -> StudentSearchResults:
+    """Fire command that searches a dataset using the configured BM25 index.
+
+    Args:
+        dataset_path: Input RAG dataset JSON path.
+        k: Number of sources to retrieve for each question.
+        save_directory: Directory where the results JSON is written.
+        index_path: Path to the processed chunk index.
+
+    Returns:
+        Search results saved to ``save_directory``.
+    """
     return run_search(
         data_path=dataset_path, k=k, save_dir=save_directory,
         index_path=index_path
@@ -66,19 +101,35 @@ def search_dataset(
 
 def evaluate(
     student_search_results_path: str | Path,
-    dataset_path: str | Path
-        ) -> dict[str, int | float]:
-    metrics = evaluation(
+        dataset_path: str | Path
+        ) -> None:
+    """Print Recall@k metrics for saved search results.
+
+    Args:
+        student_search_results_path: Path to student search-results JSON.
+        dataset_path: Path to the answered ground-truth dataset JSON.
+    """
+    evaluation(
         student_search_res_path=student_search_results_path,
         dataset_path=dataset_path)
-    return metrics
+    return None
 
 
 def index(
     max_chunk_size: int = 2000,
     raw_data_path: str | Path = "data/raw",
-    output_path: str | Path = "data/processed/index.json"
+        output_path: str | Path = "data/processed/index.json"
         ) -> dict[str, int | str | Path]:
+    """Build and save the searchable index for the raw corpus.
+
+    Args:
+        max_chunk_size: Maximum number of characters in one chunk.
+        raw_data_path: Directory containing the raw vLLM corpus.
+        output_path: Destination path for the index JSON file.
+
+    Returns:
+        The saved index path and number of generated chunks.
+    """
     indexer_class = Indexer(raw_data_path)
     res_of_index = indexer_class.main_machine_chunk(
         output_path=output_path,
@@ -93,8 +144,18 @@ def index(
 def search(
     query: str,
     k: int,
-    index_path: str = "data/processed/index.json"
+        index_path: str = "data/processed/index.json"
         ) -> list[MinimalSource]:
+    """Retrieve the top source locations for one query.
+
+    Args:
+        query: Natural-language question to search for.
+        k: Number of sources to retrieve.
+        index_path: Path to the processed chunk index.
+
+    Returns:
+        Top-k source locations ranked by BM25.
+    """
     retriever_class = Retriever(path=index_path)
     res_of_search = retriever_class.search(query=query, k=k)
     return res_of_search
@@ -104,8 +165,19 @@ def answer(
     query: str,
     k: int,
     index_path: str | Path = "data/processed/index.json",
-    root_path: str | Path = "."
+        root_path: str | Path = "."
         ) -> MinimalAnswer:
+    """Retrieve evidence and generate one grounded answer.
+
+    Args:
+        query: Natural-language question to answer.
+        k: Number of source chunks to retrieve.
+        index_path: Path to the processed chunk index.
+        root_path: Project root used to locate source files.
+
+    Returns:
+        A validated answer with the retrieved source locations.
+    """
     unanswered_query = UnansweredQuestion(question=query)
     retriver_class = Retriever(index_path)
     min_sources = retriver_class.search(query, k)
@@ -122,8 +194,18 @@ def answer(
 def answer_dataset(
     student_search_results_path: str | Path,
     save_directory: str | Path,
-    root_path: str | Path = "."
+        root_path: str | Path = "."
         ) -> StudentSearchResultsAndAnswer:
+    """Generate and save grounded answers for existing search results.
+
+    Args:
+        student_search_results_path: Input search-results JSON path.
+        save_directory: Directory where the answer-results JSON is written.
+        root_path: Project root used to locate source files.
+
+    Returns:
+        Answer results containing the original sources and generated answers.
+    """
     answers: list[MinimalAnswer] = []
     search_results_path = Path(student_search_results_path)
     search_results_data = read_json_file(search_results_path)

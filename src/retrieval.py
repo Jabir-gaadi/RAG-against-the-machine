@@ -11,7 +11,22 @@ from tqdm import tqdm
 
 
 class Retriever():
+    """Load indexed chunks and retrieve relevant source ranges with BM25.
+
+    Attributes:
+        path: Path to the JSON index file.
+        loaded_list: Validated chunks loaded from the index.
+        tokenized_corpus: Tokenized contents used to build BM25.
+        bm25: BM25 model built from the indexed chunks.
+    """
+
     def __init__(self, path: str | Path):
+        """Initialize the retriever and build its BM25 index.
+
+        Args:
+            path: Path to the JSON file containing indexed chunks.
+        """
+
         self.path = Path(path)
         self.loaded_list: list[IndexedChunk] = []
         self.tokenized_corpus: list[list[str]] = []
@@ -19,6 +34,18 @@ class Retriever():
         self.build_bm25()
 
     def load_and_convert(self) -> list[IndexedChunk]:
+        """Load the JSON index and validate each item as an indexed chunk.
+
+        Returns:
+            Validated chunks read from the index file.
+
+        Raises:
+            FileNotFoundError: If the index file does not exist.
+            PermissionError: If the index file cannot be read.
+            ValueError: If the JSON is invalid or an item has an invalid
+                schema.
+        """
+
         self.loaded_list = []
         try:
             with open(self.path, 'r', encoding='utf-8') as file:
@@ -37,11 +64,29 @@ class Retriever():
         return self.loaded_list
 
     def tokenize_text(self, content: str) -> list[str]:
+        """Convert natural-language text into lowercase word tokens.
+
+        Args:
+            content: Text to tokenize.
+
+        Returns:
+            Lowercase tokens extracted from the text.
+        """
+
         content = content.lower()
         tokenize_list = findall(r'\w+', content)
         return tokenize_list
 
     def tokenize_python(self, content: str) -> list[str]:
+        """Tokenize Python-related text, preserving and splitting identifiers.
+
+        Args:
+            content: Python source text or a Python-related query.
+
+        Returns:
+            Lowercase identifier tokens, including underscore-separated parts.
+        """
+
         content = content.lower()
         final_tokens = []
         tokenize_list = findall(r"[A-Za-z0-9_]+", content)
@@ -53,6 +98,12 @@ class Retriever():
         return final_tokens
 
     def build_bm25(self) -> None:
+        """Load indexed chunks, tokenize them, and construct the BM25 model.
+
+        Raises:
+            ValueError: If the index does not contain any chunks.
+        """
+
         self.tokenized_corpus = []
         load_indexed = self.load_and_convert()
         if not load_indexed:
@@ -69,6 +120,20 @@ class Retriever():
         self.bm25 = our_bm25
 
     def search(self, query: str, k: int) -> list[MinimalSource]:
+        """Return the ``k`` source ranges most relevant to a query.
+
+        Args:
+            query: Natural-language question to search for.
+            k: Maximum number of source ranges to return.
+
+        Returns:
+            Ranked source ranges for the best matching indexed chunks.
+
+        Raises:
+            ValueError: If ``k`` is not positive or the query has no tokens.
+            RuntimeError: If BM25 cannot be initialized.
+        """
+
         if k <= 0:
             raise ValueError("NUmber of score should > 0 !")
         minimal_src_list: list[MinimalSource] = []
@@ -101,6 +166,16 @@ class Retriever():
         rag_data: RagDataset,
         k: int
             ) -> StudentSearchResults:
+        """Retrieve sources for every question in a RAG dataset.
+
+        Args:
+            rag_data: Dataset containing questions to search.
+            k: Maximum number of sources to retrieve per question.
+
+        Returns:
+            Search results with the original question metadata and sources.
+        """
+
         searching_quesions: list[MinimalSource] = []
         searching_results: list[MinimalSearchResults] = []
         for data in tqdm(rag_data.rag_questions):
