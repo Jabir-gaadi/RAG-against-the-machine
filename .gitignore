@@ -29,7 +29,7 @@ Thumbs.db
 .ipynb_checkpoints/
 
 # vll_model
-vllm-0.10.1/
+
 
 # data
 datasets_public/
