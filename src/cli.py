@@ -1,3 +1,4 @@
+from pydantic import ValidationError
 from typing import Any
 from .models import StudentSearchResultsAndAnswer
 from .models import MinimalAnswer
@@ -31,7 +32,7 @@ def read_json_file(path: str | Path) -> Any:
         with open(path, 'r', encoding='utf-8') as file:
             data = json.load(file)
     except FileNotFoundError:
-        raise FileNotFoundError(f"cant found this file {path}")
+        raise FileNotFoundError(f"cant found this file {path}") from None
     except PermissionError:
         raise PermissionError(f"No permission to {path}")
     except json.JSONDecodeError:
@@ -58,10 +59,15 @@ def run_search(
     """
     data_path = Path(data_path)
     json_data = read_json_file(data_path)
-    dataset = RagDataset.model_validate(json_data)
+    try:
+        dataset = RagDataset.model_validate(json_data)
+    except ValidationError as e:
+        first_error = e.errors()[0]
+        message = first_error["msg"]
+        raise ValueError(f"Invalid dataset : {message}") from None
     retriever = Retriever(index_path)
     student_search_res: StudentSearchResults = retriever.search_dataset(
-                                                                dataset, k)
+                                                                    dataset, k)
     try:
         save_dir = Path(save_dir)
         save_dir.mkdir(parents=True, exist_ok=True)
@@ -130,6 +136,9 @@ def index(
     Returns:
         The saved index path and number of generated chunks.
     """
+    raw_data_path = Path(raw_data_path)
+    if not raw_data_path.is_dir():
+        raise ValueError(f"Error: Cannot find directory: {raw_data_path}")
     indexer_class = Indexer(raw_data_path)
     res_of_index = indexer_class.main_machine_chunk(
         output_path=output_path,
@@ -145,7 +154,7 @@ def search(
     query: str,
     k: int,
         index_path: str = "data/processed/index.json"
-        ) -> list[MinimalSource]:
+        ) -> list[MinimalSource] | None:
     """Retrieve the top source locations for one query.
 
     Args:
@@ -156,6 +165,9 @@ def search(
     Returns:
         Top-k source locations ranked by BM25.
     """
+    if not query:
+        print("query must contain at least one searchable token")
+        return None
     retriever_class = Retriever(path=index_path)
     res_of_search = retriever_class.search(query=query, k=k)
     return res_of_search
@@ -180,7 +192,7 @@ def answer(
     """
     unanswered_query = UnansweredQuestion(question=query)
     retriver_class = Retriever(index_path)
-    min_sources = retriver_class.search(query, k)
+    min_sources: list[MinimalSource] = retriver_class.search(query, k)
     generator = Generator(root_path)
     generated_answer = generator.answer_question(query, min_sources)
     return MinimalAnswer(
@@ -209,7 +221,12 @@ def answer_dataset(
     answers: list[MinimalAnswer] = []
     search_results_path = Path(student_search_results_path)
     search_results_data = read_json_file(search_results_path)
-    student_res = StudentSearchResults.model_validate(search_results_data)
+    try:
+        student_res = StudentSearchResults.model_validate(search_results_data)
+    except ValidationError as e:
+        first_error = e.errors()[0]
+        message = first_error['msg']
+        raise ValueError(f"invalid data : {message}") from None
     generator = Generator(root_path)
     for res in tqdm(student_res.search_results, desc="Generating answers"):
         generated_answer = generator.answer_question(

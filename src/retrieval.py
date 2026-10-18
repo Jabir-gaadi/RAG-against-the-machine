@@ -135,13 +135,13 @@ class Retriever():
         """
 
         if k <= 0:
-            raise ValueError("NUmber of score should > 0 !")
+            raise ValueError("k must be greater than 0!")
         minimal_src_list: list[MinimalSource] = []
         if k > len(self.loaded_list):
             k = len(self.loaded_list)
         query_tokens = self.tokenize_text(query)
         if not query_tokens:
-            raise ValueError("we get error in chunking the query!")
+            raise ValueError("query must contain at least 1 searchable token")
         if self.bm25 is None:
             self.build_bm25()
         if self.bm25 is None:
@@ -176,10 +176,12 @@ class Retriever():
             Search results with the original question metadata and sources.
         """
 
-        searching_quesions: list[MinimalSource] = []
+        searching_quesions: list[MinimalSource] | None = []
         searching_results: list[MinimalSearchResults] = []
         for data in tqdm(rag_data.rag_questions):
             searching_quesions = self.search(data.question, k)
+            if not searching_quesions:
+                continue
             searching_results.append(MinimalSearchResults(
                 question_id=data.question_id,
                 question=data.question,

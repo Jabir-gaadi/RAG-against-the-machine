@@ -1,3 +1,4 @@
+from pydantic import ValidationError
 from .models import AnsweredQuestion
 from pathlib import Path
 import json
@@ -53,8 +54,13 @@ def evaluation(
     dataset_path = Path(dataset_path)
     student_search_data = read_json_files(search_path)
     dataset_content = read_json_files(dataset_path)
-    search_data = StudentSearchResults.model_validate(student_search_data)
-    rag_datasets = RagDataset.model_validate(dataset_content)
+    try:
+        search_data = StudentSearchResults.model_validate(student_search_data)
+        rag_datasets = RagDataset.model_validate(dataset_content)
+    except ValidationError as e:
+        first_error = e.errors()[0]
+        message = first_error['msg']
+        raise ValueError(f"Error : {message}") from None
     truth_data_dic = {
         answer.question_id: answer.sources
         for answer in rag_datasets.rag_questions
@@ -93,7 +99,7 @@ def evaluation(
         recall_dic[key] = hit / total_answered_q
     print("\nRetrieval evaluation")
     print(f"Questions evaluated: {total_answered_q}")
-    print(f"Recall@1:  {recall_dic[1]:.1%}")
-    print(f"Recall@3:  {recall_dic[3]:.1%}")
-    print(f"Recall@5:  {recall_dic[5]:.1%}")
-    print(f"Recall@10: {recall_dic[10]:.1%}")
+    for key in key_val:
+        if k < key:
+            break
+        print(f"Recall@{key}:  {recall_dic[key]:.1%}")
