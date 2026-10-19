@@ -7,6 +7,17 @@ from json import JSONDecodeError
 from .models import StudentSearchResults, RagDataset
 
 
+def calucule_IoU(start1: int, end1: int, start2: int, end2: int) -> float:
+    intersection = min(end1, end2) - max(start1, start2)
+    if intersection <= 0:
+        return 0.0
+    first = end1 - start1
+    second = end2 - start2
+    union = first + second - intersection
+    IoU = intersection / union
+    return IoU
+
+
 def read_json_files(path: Path) -> dict:
     """Read and decode a UTF-8 JSON file.
 
@@ -95,8 +106,9 @@ at least 1 source")
                     retrieve_start = target_source.first_character_index
                     retrieve_end = target_source.last_character_index
                     overlap = (
-                        retrieve_start < search_end
-                        and search_start < retrieve_end
+                        calucule_IoU(
+                            search_start, search_end,
+                            retrieve_start, retrieve_end) > 0.05
                     )
                     if overlap:
                         hit += 1
