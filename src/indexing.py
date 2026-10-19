@@ -17,9 +17,9 @@ class Indexer:
             data_path: Root directory containing source files to index.
         """
         self.data_path = pathlib.Path(data_path)
-        self.documents = {}
+        self.documents: dict[str, tuple[str, str]] = {}
 
-    def extract_corpus(self):
+    def extract_corpus(self) -> dict[str, tuple[str, str]]:
         """Read supported source files and preserve corpus-relative paths.
 
         Returns:

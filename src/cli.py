@@ -138,7 +138,7 @@ def index(
     """
     raw_data_path = Path(raw_data_path)
     if not raw_data_path.is_dir():
-        raise ValueError(f"Error: Cannot find directory: {raw_data_path}")
+        raise ValueError(f"Cannot find directory: {raw_data_path}")
     indexer_class = Indexer(raw_data_path)
     res_of_index = indexer_class.main_machine_chunk(
         output_path=output_path,
@@ -154,7 +154,7 @@ def search(
     query: str,
     k: int,
         index_path: str = "data/processed/index.json"
-        ) -> list[MinimalSource] | None:
+        ) -> list[MinimalSource]:
     """Retrieve the top source locations for one query.
 
     Args:
@@ -166,8 +166,7 @@ def search(
         Top-k source locations ranked by BM25.
     """
     if not query:
-        print("query must contain at least one searchable token")
-        return None
+        raise ValueError("query must contain at least one searchable token")
     retriever_class = Retriever(path=index_path)
     res_of_search = retriever_class.search(query=query, k=k)
     return res_of_search

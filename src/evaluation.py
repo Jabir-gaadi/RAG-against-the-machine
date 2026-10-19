@@ -1,3 +1,4 @@
+from typing import Any
 from pydantic import ValidationError
 from .models import AnsweredQuestion
 from pathlib import Path
@@ -36,7 +37,7 @@ def read_json_files(path: Path) -> dict:
 
 def evaluation(
     student_search_res_path: str | Path, dataset_path: str | Path
-        ) -> None:
+        ) -> Any:
     """Calculate Recall@k from search results and answered ground truth.
 
     A question counts as a hit when a retrieved source has the same file path
@@ -82,7 +83,11 @@ def evaluation(
         for search_question_id, search_source in search_data_dic.items():
             if search_question_id not in truth_data_dic:
                 continue
-            target_source = truth_data_dic[search_question_id][0]
+            if truth_data_dic[search_question_id]:
+                target_source = truth_data_dic[search_question_id][0]
+            else:
+                raise ValueError("each rag question must contain\
+at least 1 source")
             for one_search_source in search_source[:key]:
                 if one_search_source.file_path == target_source.file_path:
                     search_start = one_search_source.first_character_index

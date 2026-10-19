@@ -41,3 +41,7 @@ pvmoulinette_docs:
 
 pvmoulinette_code:
 	./moulinette/moulinette-ubuntu evaluate_student_search_results data/output/search_results/UnansweredQuestions/dataset_code_private.json data/datasets/private/AnsweredQuestions/dataset_code_private.json --k 10 --max_context_length 2000
+
+lint:
+	flake8 src
+	mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs

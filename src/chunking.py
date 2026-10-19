@@ -154,7 +154,7 @@ def chunk_python_files(
     buff_start = 0
     valid_chunk_py = []
 
-    def add_range(start, end) -> None:
+    def add_range(start: int, end: int) -> None:
         """Append a range directly or split it when it exceeds the limit."""
         if start >= end:
             return

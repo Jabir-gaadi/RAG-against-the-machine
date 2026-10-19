@@ -1,6 +1,7 @@
 from .models import MinimalSource
 from pathlib import Path
 import torch
+from typing import Any
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
@@ -15,8 +16,8 @@ class Generator():
         """
         self.root_path: Path = Path(root_path)
         self.model_name = "Qwen/Qwen3-0.6B"
-        self.tokenizer = None
-        self.model = None
+        self.tokenizer: Any | None = None
+        self.model: Any | None = None
 
     def load_context(self, min_sources: list[MinimalSource]) -> list[
             dict[str, list[int] | str]]:
