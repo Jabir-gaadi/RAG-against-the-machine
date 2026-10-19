@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, cast
 from pydantic import ValidationError
 from .models import AnsweredQuestion
 from pathlib import Path
@@ -18,7 +18,7 @@ def calucule_IoU(start1: int, end1: int, start2: int, end2: int) -> float:
     return IoU
 
 
-def read_json_files(path: Path) -> dict:
+def read_json_files(path: Path) -> dict[str, Any]:
     """Read and decode a UTF-8 JSON file.
 
     Args:
@@ -43,7 +43,7 @@ def read_json_files(path: Path) -> dict:
             f"No permission to {path}")
     except JSONDecodeError:
         raise ValueError("Invalid json file")
-    return json_res
+    return cast(dict[str, Any], json_res)
 
 
 def evaluation(

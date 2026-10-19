@@ -1,5 +1,6 @@
 [tool.mypy]
 python_version = "3.10"
+exclude = ["^data/raw/"]
 
 [tool.poetry]
 package-mode = false

@@ -102,7 +102,7 @@ so.'
             self.model_name,
             dtype=torch.float32
             )
-        self.model.to("cpu")
+        # self.model.to("cpu")
         self.model.eval()
 
     def generate_from_prompt(self, prompt: str) -> str:
@@ -141,7 +141,7 @@ so.'
             generated_ids[0, prompt_length:],
             skip_special_tokens=True
             )
-        return decode_new_tok.strip()
+        return str(decode_new_tok.strip())
 
     def answer_question(self, query: str, sources: list[MinimalSource]) -> str:
         """Generate a grounded answer from a query and retrieved sources.
