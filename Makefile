@@ -58,3 +58,11 @@ lint:
 
 install:
 	uv sync
+
+run:
+	uv run python -m src
+
+debug:
+	uv run python -m pdb -m src
+
+.PHONY: install run debug clean fclean lint index search_dataset_docs search_dataset_code code_eval docs_eval
