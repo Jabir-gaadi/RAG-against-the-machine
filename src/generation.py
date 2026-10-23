@@ -79,14 +79,9 @@ exactly: "
             "I do not have enough context to answer this question.\n\n"
                 )
         for i, context in enumerate(context_record, 1):
-            head = f"context {i}\n"
-            prompt += head
-            source = f"source: {context['source']}\n"
-            prompt += source
-            range_char = f"character range: {context['character_range']}\n"
-            prompt += range_char
-            content = f"content:\n{context['content']}\n"
-            prompt += content
+            if len(prompt) > 10000:
+                break
+            prompt += f"Context {i}: {context['content']}\n"
         prompt += f'Question:\n{query}\n'
         prompt += 'Answer:\n'
         return prompt
