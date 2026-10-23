@@ -70,16 +70,14 @@ class Generator():
         Returns:
             Prompt instructing Qwen to answer only from supplied evidence.
         """
-        prompt = 'Answer only from the provided context.\n'
-        prompt += 'Use only facts explicitly stated in the provided context.'
-        prompt += 'If the context does not explicitly contain the answer, \
-reply exactly:\n'
-        prompt += '/"I do not have enough context to answer this question./"'
-        prompt += 'Do not use prior knowledge, infer missing facts,'
-        prompt += 'or expand abbreviations unless the context explicitly does \
-so.'
-        prompt += 'If the context is insufficient, say so. '
-        prompt += 'Do not invent facts.\n'
+        prompt = (
+            "You are a question-answering assistant.\n"
+            "Answer the question using only the context below.\n"
+            "If the context contains the answer, give a short direct answer.\n"
+            "Only when the context truly does not contain the answer, reply \
+exactly: "
+            "I do not have enough context to answer this question.\n\n"
+                )
         for i, context in enumerate(context_record, 1):
             head = f"context {i}\n"
             prompt += head
