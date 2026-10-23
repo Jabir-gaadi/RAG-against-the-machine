@@ -1,3 +1,4 @@
+from warnings import warn
 from .models import RagDataset, MinimalSource, StudentSearchResults
 from .models import MinimalSearchResults
 from json import JSONDecodeError
@@ -138,6 +139,7 @@ class Retriever():
             raise ValueError("k must be greater than 0!")
         minimal_src_list: list[MinimalSource] = []
         if k > len(self.loaded_list):
+            warn("arg k is big than number of chunks, k will the total chunks")
             k = len(self.loaded_list)
         query_tokens = self.tokenize_text(query)
         if not query_tokens:
