@@ -30,7 +30,7 @@ class Indexer:
             UserWarning: If a file cannot be decoded, read, or found.
         """
         files = self.data_path.rglob("*")
-        valid_files = ['.py', '.md', '.txt', '.rst']
+        valid_files = ['.py', '.md', '.txt']
         files_list = [
             file for file in files if file.suffix.lower() in valid_files
             ]

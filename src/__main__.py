@@ -1,6 +1,5 @@
 if __name__ == "__main__":
     try:
-        # pyrefly: ignore[missing-import]
         import fire
         import sys
     except ImportError as e:
