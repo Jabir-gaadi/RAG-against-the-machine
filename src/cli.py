@@ -140,7 +140,6 @@ def index(
         raise ValueError("max_chunk_size must be an integer")
     try:
         origin = max_chunk_size
-        max_chunk_size = int(max_chunk_size)
         if origin != max_chunk_size:
             raise ValueError("max_chunk_size must be an integer")
     except ValueError:
