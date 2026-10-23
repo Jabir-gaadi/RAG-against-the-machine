@@ -139,7 +139,10 @@ def index(
     if isinstance(max_chunk_size, bool):
         raise ValueError("max_chunk_size must be an integer")
     try:
+        origin = max_chunk_size
         max_chunk_size = int(max_chunk_size)
+        if origin != max_chunk_size:
+            raise ValueError("max_chunk_size must be an integer")
     except ValueError:
         raise ValueError("number chunk size should be valid integer") from None
     if not 0 < max_chunk_size <= 2000:
