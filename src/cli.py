@@ -136,6 +136,14 @@ def index(
     Returns:
         The saved index path and number of generated chunks.
     """
+    if isinstance(max_chunk_size, bool):
+        raise ValueError("max_chunk_size must be an integer")
+    try:
+        max_chunk_size = int(max_chunk_size)
+    except ValueError:
+        raise ValueError("number chunk size should be valid integer") from None
+    if not 0 < max_chunk_size <= 2000:
+        raise ValueError("chunk size should be in range 1 - 2000") from None
     raw_data_path = Path(raw_data_path)
     if not raw_data_path.is_dir():
         raise ValueError(f"Cannot find directory: {raw_data_path}")
